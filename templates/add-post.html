@@ -1,49 +1,67 @@
 {% block content %}
 {% include 'header.html' %}
 
-<div class="container">
+
+<div class="container pb-5 mb-5">
 
     <div class="row justify-content-center">
-        <div class="col-6 border border-2 border-light rounded p-5">
-            <form method="POST" action="{{ url_for('create_post') }}">
+        <div class="col-6 border border-2 border-light rounded p-5 add-post-form">
+            <h3 class="text-center">Add New Post</h3>
+            <form method="POST" action="{{ url_for('create_post') }}" novalidate>
                 {{ form.hidden_tag() }}
                 <div class="form-group">
-                    {{ form.title.label(class="form-label text-light") }}
-                    {{ form.title(size=30, class="form-control") }}
+                    {{ form.title.label(class_="form-label") }}
+                    {{ form.title(class_="form-control") }}
+                    {% for err in form.title.errors %}
+                    <span style="color: red">{{ err }}</span>
+                    {% endfor %}
                 </div>
                 <div class="form-group">
-                    {{ form.subtitle.label(class="form-label text-light") }}
-                    {{ form.subtitle(size=30, class="form-control") }}
+                    {{ form.subtitle.label(class_="form-label") }}
+                    {{ form.subtitle(class_="form-control") }}
+                    {% for err in form.subtitle.errors %}
+                    <span style="color: red">{{ err }}</span>
+                    {% endfor %}
                 </div>
                 <div class="form-group">
-                    {{ form.location.label(class="form-label text-light") }}
-                    {{ form.location(size=30, class="form-control") }}
+                    {{ form.location.label(class_="form-label") }}
+                    {{ form.location(class_="form-control") }}
+                    {% for err in form.location.errors %}
+                    <span style="color: red">{{ err }}</span>
+                    {% endfor %}
                 </div>
                 <div class="form-group">
-                    {{ form.num_times_visited.label(class="form-label text-light") }}
-                    {{ form.num_times_visited(class="form-control") }}
+                    {{ form.num_times_visited.label(class_="form-label") }}
+                    {{ form.num_times_visited(class_="form-control") }}
+                    {% for err in form.num_times_visited.errors %}
+                    <span style="color: red">{{ err }}</span>
+                    {% endfor %}
                 </div>
                 <div class="form-group">
-                    {{ form.body.label(class="form-label text-light") }}
-                    {{ form.body(size=250, class="form-control") }}
+                    {{ form.body.label(class_="form-label") }}
+                    {{ form.body(class_="form-control") }}
+                    {% for err in form.body.errors %}
+                    <span style="color: red">{{ err }}</span>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    {{ form.rating.label(class_="form-label") }}
+                    {{ form.rating(class_="form-control") }}
+                </div>
+                <div class="form-group">
+                    {{ form.img_url.label(class_="form-label") }}
+                    {{ form.img_url(class_="form-control") }}
+                    {% for err in form.img_url.errors %}
+                    <span style="color: red">{{ err }}</span>
+                    {% endfor %}
                 </div>
                 <div class="form-check py-2">
-                    {{ form.visit_again(class="form-check-input") }}
-                    {{ form.visit_again.label(class="form-check-label text-light") }}
+                    {{ form.visit_again.label }}
+                    {{ form.visit_again(class_="form-check-input") }}
                 </div>
-                <div class="form-group">
-                    {{ form.rating.label(class="form-label text-light") }}
-                    {{ form.rating(class="form-control") }}
+                <div id="add-post-form-submit" class="form-group">
+                    {{ form.submit(class_="btn btn-success") }}
                 </div>
-                <div class="form-group">
-                    {{ form.img_url.label(class="form-label text-light") }}
-                    {{ form.img_url(size=30, class="form-control") }}
-                </div>
-                <div class="form-group pt-4">
-                    {{ form.submit() }}
-                </div>
-
-
             </form>
         </div>
     </div>

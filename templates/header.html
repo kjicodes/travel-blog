@@ -8,56 +8,51 @@
           integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}"/>
     {% endblock %}
-
-    <!--    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/passport.png') }}" />-->
 </head>
 <body>
+    <nav>
+        <div class="container">
+            <div class="d-flex flex-wrap justify-content-center">
+                <a href="{{ url_for('get_all_posts') }}"
+                   class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="36" fill="currentColor"
+                         class="bi bi-journal-check" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd"
+                              d="M10.854 6.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 8.793l2.646-2.647a.5.5 0 0 1 .708 0"/>
+                        <path d="M3 0h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-1h1v1a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v1H1V2a2 2 0 0 1 2-2"/>
+                        <path d="M1 5v-.5a.5.5 0 0 1 1 0V5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1zm0 3v-.5a.5.5 0 0 1 1 0V8h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1zm0 3v-.5a.5.5 0 0 1 1 0v.5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1z"/>
+                    </svg>
+                    <div class="px-1"></div>
+                    <span class="fs-4 fw-bold" id="travel-blog-logo">Travel Blog</span>
+                </a>
+                <ul class="nav nav-pills">
+                    <li class="nav-item">
+                        <a href="{{ url_for('get_all_posts') }}" class="nav-link text-dark" aria-current="page">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('create_post') }}" class="nav-link text-dark">Add Post</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link text-dark">About the Owner</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link text-dark">Reach Out</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link text-dark">Register</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active text-dark bg-light">Login</a>
+                    </li>
 
-<div id="section-header">
-    <div class="container">
-        <header class="d-flex flex-wrap justify-content-center py-3 mb-4">
-            <a href="{{ url_for('get_all_posts') }}"
-               class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="36" fill="currentColor"
-                     class="bi bi-journal-check text-light" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd"
-                          d="M10.854 6.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 8.793l2.646-2.647a.5.5 0 0 1 .708 0"/>
-                    <path d="M3 0h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-1h1v1a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v1H1V2a2 2 0 0 1 2-2"/>
-                    <path d="M1 5v-.5a.5.5 0 0 1 1 0V5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1zm0 3v-.5a.5.5 0 0 1 1 0V8h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1zm0 3v-.5a.5.5 0 0 1 1 0v.5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1z"/>
-                </svg>
-                <div class="px-1"></div>
-                {% if is_add_page %}
-                <span class="fs-4 text-light fw-bold">Add New Post</span>
-                {% else %}
-                <span class="fs-4 text-light fw-bold">Travel Blog</span>
-                {% endif %}
-            </a>
-            <ul class="nav nav-pills">
-                <li class="nav-item">
-                    <a href="{{ url_for('get_all_posts') }}" class="nav-link text-dark" aria-current="page">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ url_for('create_post') }}" class="nav-link text-dark">Add Post</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link text-dark">About the Owner</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link text-dark">Reach Out</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link active text-dark bg-light">Login</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link text-dark">Register</a>
-                </li>
 
-            </ul>
-        </header>
-    </div>
+                </ul>
+            </div>
+        </div>
+    </nav>
 
-</div>
 <main>
+
 
 
 
