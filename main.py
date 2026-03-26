@@ -3,7 +3,7 @@ from datetime import date
 from flask import Flask, render_template, redirect, url_for, request
 # from flask_bootstrap import Bootstrap5
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Integer, String, Text, ForeignKey, Boolean
+from sqlalchemy import Integer, String, Text, ForeignKey, Boolean, desc
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from forms import CreatePostForm
 
@@ -41,14 +41,19 @@ with app.app_context():
 
 @app.route('/')
 def get_all_posts():
-    all_posts = db.session.execute(db.select(BlogPost)).scalars().all()
+    all_posts = db.session.execute(db.select(BlogPost).order_by(desc(BlogPost.id))).scalars().all()
 
     return render_template('index.html', posts=all_posts)
+
+@app.route('/my-post/<int:post_id>')
+def get_post(post_id):
+    post = db.get_or_404(BlogPost, post_id)
+
+    return render_template('post.html', post=post)
 
 @app.route('/add', methods=['GET', 'POST'])
 def create_post():
     form = CreatePostForm()
-    add_post_page = True
 
     if form.validate_on_submit():
 
@@ -63,13 +68,17 @@ def create_post():
             rating=form.rating.data,
             img_url=form.img_url.data
         )
+
         db.session.add(new_post)
         db.session.commit()
-        add_post_page = False
 
-        return redirect(url_for('get_all_posts', is_add_page=add_post_page))
+        post_id = db.session.execute(db.select(BlogPost).where(BlogPost.title == form.title.data)).scalar().id
+        print(post_id)
 
-    return render_template('add-post.html', form=form, is_add_page=add_post_page)
+
+        return redirect(url_for('get_post', post_id=post_id))
+
+    return render_template('add-post.html', form=form)
 
 
 if __name__ == '__main__':
