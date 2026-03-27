@@ -1,68 +1,17 @@
-{% block content %}
-{% include 'header.html' %}
+{% from 'bootstrap5/form.html' import render_form %}
+{% block content %} {% include 'header.html' %}
 
 
 <div class="container pb-5 mb-5">
 
     <div class="row justify-content-center">
         <div class="col-6 border border-2 border-light rounded p-5 add-post-form">
-            <h3 class="text-center">Add New Post</h3>
-            <form method="POST" action="{{ url_for('create_post') }}" novalidate>
-                {{ form.hidden_tag() }}
-                <div class="form-group">
-                    {{ form.title.label(class_="form-label") }}
-                    {{ form.title(class_="form-control") }}
-                    {% for err in form.title.errors %}
-                    <span style="color: red">{{ err }}</span>
-                    {% endfor %}
-                </div>
-                <div class="form-group">
-                    {{ form.subtitle.label(class_="form-label") }}
-                    {{ form.subtitle(class_="form-control") }}
-                    {% for err in form.subtitle.errors %}
-                    <span style="color: red">{{ err }}</span>
-                    {% endfor %}
-                </div>
-                <div class="form-group">
-                    {{ form.location.label(class_="form-label") }}
-                    {{ form.location(class_="form-control") }}
-                    {% for err in form.location.errors %}
-                    <span style="color: red">{{ err }}</span>
-                    {% endfor %}
-                </div>
-                <div class="form-group">
-                    {{ form.num_times_visited.label(class_="form-label") }}
-                    {{ form.num_times_visited(class_="form-control") }}
-                    {% for err in form.num_times_visited.errors %}
-                    <span style="color: red">{{ err }}</span>
-                    {% endfor %}
-                </div>
-                <div class="form-group">
-                    {{ form.body.label(class_="form-label") }}
-                    {{ form.body(class_="form-control") }}
-                    {% for err in form.body.errors %}
-                    <span style="color: red">{{ err }}</span>
-                    {% endfor %}
-                </div>
-                <div class="form-group">
-                    {{ form.rating.label(class_="form-label") }}
-                    {{ form.rating(class_="form-control") }}
-                </div>
-                <div class="form-group">
-                    {{ form.img_url.label(class_="form-label") }}
-                    {{ form.img_url(class_="form-control") }}
-                    {% for err in form.img_url.errors %}
-                    <span style="color: red">{{ err }}</span>
-                    {% endfor %}
-                </div>
-                <div class="form-check py-2">
-                    {{ form.visit_again.label }}
-                    {{ form.visit_again(class_="form-check-input") }}
-                </div>
-                <div id="add-post-form-submit" class="form-group">
-                    {{ form.submit(class_="btn btn-success") }}
-                </div>
-            </form>
+            {% if is_edit %}
+            <h3 class="text-center">Edit Post</h3>
+            {% else %}
+            <h3 class="text-center">Add Post</h3>
+            {% endif %}
+            {{ render_form(form, novalidate, button_style="light") }}
         </div>
     </div>
 </div>
