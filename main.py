@@ -1,17 +1,18 @@
-from typing import List
+
 from datetime import date
 from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_bootstrap import Bootstrap5
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Integer, String, Text, ForeignKey, Boolean, desc, UniqueConstraint
+from sqlalchemy import Integer, String, Text, ForeignKey, Boolean, desc
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from forms import CreatePostForm, LoginForm, RegisterForm
-from flask_login import LoginManager, UserMixin, login_user, logout_user
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
+app.config["SECRET_KEY"] = "8BYkEfBA6O6donzWlSihBXox7C0sKR6b"
 Bootstrap5(app)
 
 #Initalize DB
@@ -28,12 +29,10 @@ class User(UserMixin, db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     first_name: Mapped[str] = mapped_column(String(250), nullable=False)
     last_name: Mapped[str] = mapped_column(String(250), nullable=False)
-    username: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
     email: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String(250), nullable=False)
-
     posts = relationship("BlogPost", back_populates="user")
-    # __table_args__ = (UniqueConstraint('username', 'email', name='_username_email_uc'),)
+
 
 
 
@@ -69,66 +68,58 @@ def load_user(user_id):
     return user
 
 
-@app.route('/register', methods=['GET', 'POST'])
+@app.route("/register", methods=["GET", "POST"])
 def register():
     form = RegisterForm()
 
     if form.validate_on_submit():
-        user_exists = db.session.execute(db.select(User).where(User.email == form.email.data)).scalar()
-        if user_exists:
-            #Display msg and redirect to login page.
-            flash("Email already exists. Please login in.")
-            return redirect(url_for('login'))
-        else:
-            #Hash password before saving in db
-            hashed_password = generate_password_hash(form.password.data, method='pbkdf2', salt_length=8)
+        hashed_password = generate_password_hash(form.password.data, method="pbkdf2", salt_length=8)
 
+        try:
             new_user = User(
-                first_name = form.first_name.data,
-                last_name = form.last_name.data,
-                username=form.username.data,
+                first_name=form.first_name.data,
+                last_name=form.last_name.data,
                 email=form.email.data,
                 password=hashed_password
             )
             db.session.add(new_user)
             db.session.commit()
+        except IntegrityError:
+            flash("Email already exists. Please login in.", "error")
+            return redirect(url_for("login"))
+        else:
+            flash("Account successfully registered. Please log in.", "success")
+            return redirect(url_for("login"))
 
-            #Redirect to log in page and request user to log in.
-            flash('Account successfully registered. Please log in.')
-            return redirect(url_for('login'))
-
-    return render_template('register.html', form=form)
+    return render_template("register.html", form=form)
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route("/login", methods=["GET", "POST"])
 def login():
     form = LoginForm()
-
     if form.validate_on_submit():
         #check if username exists in db
-        user = db.session.execute(db.select(User).where(User.username == form.username.data)).scalar()
+        user = db.session.execute(db.select(User).where(User.email == form.email.data)).scalar()
         if user:
             #IF user exists, verify if password is correct
             stored_password = user.password
             if check_password_hash(stored_password, form.password.data):
                 login_user(user)
-
-                return redirect(url_for('get_all_posts'))
+                return redirect(url_for("get_all_posts"))
             else:
-                flash('Invalid password. Please try again.')
+                flash("Invalid password. Please try again.", "error")
         else:
-            flash('That username does not exist. Want to sign up?')
+            flash("That email does not exist. Want to sign up?", "error")
+
+    return render_template("login.html", form=form)
 
 
-
-    return render_template('login.html', form=form)
-
-
-@app.route('/logout')
+@app.route("/logout")
 def logout():
     logout_user()
+    flash("You have successfully logged out.", "success")
 
-    return redirect(url_for('get_all_posts'))
+    return redirect(url_for("login"))
 
 
 @app.route('/')
@@ -140,15 +131,15 @@ def get_all_posts():
 @app.route('/my-post/<post_id>')
 def get_post(post_id):
     post = db.get_or_404(BlogPost, post_id)
-    print(f"Post id (post page AFTER submitting edit): {post.id}")
 
     return render_template('post.html', post=post)
 
 @app.route('/add-post', methods=['GET', 'POST'])
+@login_required
 def create_post():
     form = CreatePostForm()
-    if form.validate_on_submit():
 
+    if form.validate_on_submit():
         new_post = BlogPost(
             title=form.title.data,
             subtitle=form.subtitle.data,
@@ -158,21 +149,19 @@ def create_post():
             date=date.today().strftime("%B %d, %Y"),
             body=form.body.data,
             rating=form.rating.data,
-            img_url=form.img_url.data
+            img_url=form.img_url.data,
+            user=current_user
         )
-
         db.session.add(new_post)
         db.session.commit()
-
         post_id = db.session.execute(db.select(BlogPost).where(BlogPost.title == form.title.data)).scalar().id
-
-
 
         return redirect(url_for('get_post', post_id=post_id))
 
     return render_template('add-post.html', form=form)
 
 @app.route('/edit-post/<post_id>', methods=['GET', 'POST'])
+@login_required
 def update_post(post_id):
     post = db.get_or_404(BlogPost, post_id)
     edit_form = CreatePostForm(
@@ -183,7 +172,8 @@ def update_post(post_id):
         visit_again = post.visit_again,
         body = post.body,
         rating = post.rating,
-        img_url = post.img_url
+        img_url = post.img_url,
+        user=current_user
     )
 
     if edit_form.validate_on_submit():
@@ -196,6 +186,7 @@ def update_post(post_id):
         post.body = edit_form.body.data
         post.rating = edit_form.rating.data
         post.img_url = edit_form.img_url.data
+        post.user = current_user
 
         db.session.commit()
 
@@ -204,6 +195,7 @@ def update_post(post_id):
     return render_template('add-post.html', form=edit_form, is_edit=True)
 
 @app.route('/delete/<post_id>')
+@login_required
 def delete_post(post_id):
     post = db.get_or_404(BlogPost, post_id)
     db.session.delete(post)
@@ -212,5 +204,6 @@ def delete_post(post_id):
     return redirect(url_for('get_all_posts'))
 
 
+
 if __name__ == '__main__':
-    app.run(port=5001, debug=True)
+    app.run(debug=True)
