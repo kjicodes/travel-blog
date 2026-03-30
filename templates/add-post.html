@@ -5,13 +5,13 @@
 <div class="container pb-5 mb-5">
 
     <div class="row justify-content-center">
-        <div class="col-6 border border-2 border-light rounded p-5 add-post-form">
+        <div class="col-6 border border-2 border-dark rounded p-5 add-post-form">
             {% if is_edit %}
             <h3 class="text-center">Edit Post</h3>
             {% else %}
-            <h3 class="text-center">Add Post</h3>
+            <h3 class="text-center">Create a Post</h3>
             {% endif %}
-            {{ render_form(form, novalidate, button_style="light") }}
+            {{ render_form(form, novalidate=True, button_style="light") }}
         </div>
     </div>
 </div>
