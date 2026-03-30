@@ -1,23 +1,7 @@
-#all-posts-title {
-    font-weight: bold;
-    font-size: 4.5rem;
-    color: black;
-}
-
-
 body {
     display: flex;
     flex-direction: column;
-    background-image: url('../images/travel-blog-cover.png');
-    margin: 0;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    background-position: center;
-    background-size: cover;
-    height: 50vh;
-    margin: 0;
-    image-rendering: pixelated;
-    -ms-interpolation-mode: nearest-neighbor;
+    background-color: #F3E4C9;
 }
 
 #all-posts-sub {
@@ -29,14 +13,19 @@ main {
     flex: 1;
 }
 
+#all-posts-title {
+    font-weight: bold;
+    font-size: 4.5rem;
+    color: black;
+}
+
 p {
-    font-family: "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
     font-size: 20px;
+
 }
 
 #section-footer {
     width: 100%;
-    background-color: #C08552;
 }
 
 .border-bottom {
@@ -64,11 +53,6 @@ p {
     height: 300px;
 }
 
-.add-post-form {
-    background-color: #F3E3D0;
-}
-
-
 #section-post-img {
     background-repeat: no-repeat;
     background-attachment: fixed;
@@ -78,6 +62,10 @@ p {
     margin: 0;
 }
 
+#logo-name {
+    font-size: 30px
+}
+
 
 #section-post-body {
     background-color: white;
@@ -85,6 +73,16 @@ p {
 
 .post-num-visited {
     font-weight: normal;
+}
+
+
+/*Flashes category colors */
+.success {
+    color: green;
+}
+
+.error {
+    color: red;
 }
 
 
