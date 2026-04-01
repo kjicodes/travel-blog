@@ -1,11 +1,13 @@
 body {
     display: flex;
     flex-direction: column;
-    background-color: #F3E4C9;
-}
-
-#all-posts-sub {
-    font-size:30px;
+    min-height: 100vh;
+    margin: 0;
+    background-color: #EA7B7B;
+    font-family: "Cormorant", serif;
+      font-optical-sizing: auto;
+      font-weight: <weight>;
+      font-style: normal;
 }
 
 
@@ -13,24 +15,46 @@ main {
     flex: 1;
 }
 
-#all-posts-title {
-    font-weight: bold;
-    font-size: 4.5rem;
-    color: black;
+p {
+    font-size: 1.3rem;
+    }
+
+nav {
+    position: sticky;
+    top: 0;
+    background-color: #EA7B7B;
 }
 
-p {
-    font-size: 20px;
+#all-posts-sub {
+    font-size:30px;
+}
 
+
+
+
+#all-posts-title,
+#all-posts-story,
+.bi-lightbulb-fill {
+    color: #FFEAD3;
+}
+
+#all-posts-name,
+#post-title-section {
+    color: #FFDAB3;
+}
+
+#all-posts-written-by {
+    color: #FFEAD3;
+}
+
+.bi-geo-alt-fill {
+    color: #980404;
 }
 
 #section-footer {
-    width: 100%;
+    background-color: #EA7B7B;
 }
 
-.border-bottom {
-    color: black;
-}
 #blog-logo {
     width: 40;
     height: 36;
@@ -45,13 +69,6 @@ p {
     font-size: 1.2rem;
 }
 
-.card {
-    width: 27rem;
-}
-
-.card img {
-    height: 300px;
-}
 
 #section-post-img {
     background-repeat: no-repeat;
@@ -60,12 +77,12 @@ p {
     background-size: cover;
     height: 50vh;
     margin: 0;
+
 }
 
 #logo-name {
     font-size: 30px
 }
-
 
 #section-post-body {
     background-color: white;
@@ -73,6 +90,16 @@ p {
 
 .post-num-visited {
     font-weight: normal;
+}
+
+.card {
+    background-color: #EA7B7B;
+    border: none;
+}
+
+#login-page-form,
+#register-page-form {
+    background-color: #FFEAD3;
 }
 
 
