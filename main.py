@@ -67,7 +67,7 @@ class BlogPost(db.Model):
 class Comment(db.Model):
     __tablename__ = "comments"
     id: Mapped[int] = mapped_column(primary_key=True)
-    comment: Mapped[str] = mapped_column(String(250), nullable=False)
+    comment: Mapped[str] = mapped_column(Text, nullable=False)
     date: Mapped[str] = mapped_column(String(250), nullable=False)
 
     user_id = mapped_column(ForeignKey("users.id"))
@@ -92,11 +92,11 @@ with app.app_context():
 #Configure Flask Login
 login_manager = LoginManager()
 login_manager.init_app(app)
+login_manager.login_view = "login"
 
 @login_manager.user_loader
 def load_user(user_id):
-    user = db.get_or_404(User, user_id)
-    return user
+    return db.session.get(User, user_id)
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -279,7 +279,12 @@ def contact():
             body=form.message.data
         )
         db.session.add(new_message)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            flash('A message from this email has already been received.', 'error')
+            return redirect(url_for('contact'))
 
         flash('Your message has been successfully received.', 'success')
 
