@@ -15,6 +15,7 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
+app.config["WTF_CSRF_TIME_LIMIT"] = None
 Bootstrap5(app)
 
 #Initalize DB
@@ -26,6 +27,7 @@ uri = os.environ.get("DATABASE_URL", "sqlite:///travel-blog-posts.db")
 if uri.startswith("postgres://"):
     uri = uri.replace("postgres://", "postgresql://", 1)
 app.config["SQLALCHEMY_DATABASE_URI"] = uri
+
 db.init_app(app)
 
 
