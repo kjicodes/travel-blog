@@ -22,7 +22,10 @@ class Base(DeclarativeBase):
     pass
 
 db = SQLAlchemy(model_class=Base)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///travel-blog-posts.db"
+uri = os.environ.get("DATABASE_URL", "sqlite:///travel-blog-posts.db")
+if uri.startswith("postgres://"):
+    uri = uri.replace("postgres://", "postgresql://", 1)
+app.config["SQLALCHEMY_DATABASE_URI"] = uri
 db.init_app(app)
 
 
