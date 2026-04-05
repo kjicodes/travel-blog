@@ -41,7 +41,6 @@ class User(UserMixin, db.Model):
     comments = relationship("Comment", back_populates="user")
 
 
-
 class BlogPost(db.Model):
     __tablename__ = "blog_posts"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -76,15 +75,12 @@ class Comment(db.Model):
     post = relationship("BlogPost", back_populates="comments")
 
 
-
 class Contact(db.Model):
     __tablename__ = "contact_messages"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(250), nullable=False)
     email: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
     body: Mapped[str] = mapped_column(Text, nullable=False)
-
-
 
 
 with app.app_context():
