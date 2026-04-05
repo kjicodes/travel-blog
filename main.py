@@ -238,7 +238,7 @@ def update_post(post_id):
 
     return render_template('add-post.html', form=edit_form, is_edit=True)
 
-@app.route('/delete/<post_id>')
+@app.route('/delete-post/<post_id>')
 @login_required
 def delete_post(post_id):
     post = db.get_or_404(BlogPost, post_id)
@@ -247,13 +247,16 @@ def delete_post(post_id):
 
     return redirect(url_for('get_all_posts'))
 
-@app.route("/delete/<comment_id>")
+@app.route("/delete-comment/<comment_id>")
+@login_required
 def delete_comment(comment_id):
     comment = db.get_or_404(Comment, comment_id)
     db.session.delete(comment)
     db.session.commit()
 
-    return redirect(url_for('get_post'))
+
+
+    return redirect(url_for('get_post', post_id=comment.post_id))
 
 
 @app.route('/about')
