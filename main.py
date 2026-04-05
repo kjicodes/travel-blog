@@ -1,15 +1,14 @@
-
 from datetime import date
-from flask import Flask, render_template, redirect, url_for, request, flash
+from flask import Flask, render_template, redirect, url_for, request, flash, session
 from flask_bootstrap import Bootstrap5
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Integer, String, Text, ForeignKey, Boolean, desc
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from werkzeug.security import generate_password_hash, check_password_hash
-
-from forms import CreatePostForm, LoginForm, RegisterForm
+from forms import CreatePostForm, LoginForm, RegisterForm, ContactForm, CommentForm
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "8BYkEfBA6O6donzWlSihBXox7C0sKR6b"
@@ -31,9 +30,9 @@ class User(UserMixin, db.Model):
     last_name: Mapped[str] = mapped_column(String(250), nullable=False)
     email: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String(250), nullable=False)
+
     posts = relationship("BlogPost", back_populates="user")
-
-
+    comments = relationship("Comment", back_populates="user")
 
 
 
@@ -52,6 +51,34 @@ class BlogPost(db.Model):
 
     user_id = mapped_column(ForeignKey("users.id"))
     user = relationship("User", back_populates="posts")
+
+    comments = relationship("Comment", back_populates="post")
+
+    def calc_comments_count(self):
+        return len(self.comments)
+
+class Comment(db.Model):
+    __tablename__ = "comments"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    comment: Mapped[str] = mapped_column(String(250), nullable=False)
+    date: Mapped[str] = mapped_column(String(250), nullable=False)
+
+    user_id = mapped_column(ForeignKey("users.id"))
+    user = relationship("User", back_populates="comments")
+
+    post_id = mapped_column(ForeignKey("blog_posts.id"))
+    post = relationship("BlogPost", back_populates="comments")
+
+
+
+class Contact(db.Model):
+    __tablename__ = "contact_messages"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(250), nullable=False)
+    email: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+
+
 
 
 with app.app_context():
@@ -98,10 +125,8 @@ def register():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        #check if username exists in db
         user = db.session.execute(db.select(User).where(User.email == form.email.data)).scalar()
         if user:
-            #IF user exists, verify if password is correct
             stored_password = user.password
             if check_password_hash(stored_password, form.password.data):
                 login_user(user)
@@ -122,19 +147,40 @@ def logout():
     return redirect(url_for("login"))
 
 
-@app.route('/')
+@app.route("/")
 def get_all_posts():
     all_posts = db.session.execute(db.select(BlogPost).order_by(desc(BlogPost.id))).scalars().all()
 
-    return render_template('index.html', posts=all_posts)
 
-@app.route('/my-post/<post_id>')
+    return render_template("index.html", posts=all_posts)
+
+@app.route("/my-post/<post_id>", methods=["GET", "POST"])
 def get_post(post_id):
     post = db.get_or_404(BlogPost, post_id)
+    comments = db.session.execute(db.select(Comment).where(Comment.post == post).order_by(desc(Comment.id))).scalars().all()
 
-    return render_template('post.html', post=post)
+    total_comments = len(comments)
 
-@app.route('/add-post', methods=['GET', 'POST'])
+    form = CommentForm()
+    if form.validate_on_submit():
+        if current_user.is_authenticated:
+            new_comment = Comment(
+                comment=form.comment.data,
+                date=date.today().strftime("%B %d"),
+                user=current_user,
+                post=post
+            )
+            db.session.add(new_comment)
+            db.session.commit()
+
+            return redirect(url_for('get_post', post_id=post.id))
+        else:
+            flash('Please log in.', 'error')
+            return redirect(url_for('login'))
+
+    return render_template("post.html", post=post, form=form, comments=comments, total_comments=total_comments)
+
+@app.route('/add-post', methods=["GET", "POST"])
 @login_required
 def create_post():
     form = CreatePostForm()
@@ -177,7 +223,6 @@ def update_post(post_id):
     )
 
     if edit_form.validate_on_submit():
-
         post.title = edit_form.title.data
         post.subtitle = edit_form.subtitle.data
         post.location = edit_form.location.data
@@ -189,7 +234,6 @@ def update_post(post_id):
         post.user = current_user
 
         db.session.commit()
-
         return redirect(url_for('get_post', post_id=post.id))
 
     return render_template('add-post.html', form=edit_form, is_edit=True)
@@ -203,7 +247,41 @@ def delete_post(post_id):
 
     return redirect(url_for('get_all_posts'))
 
+@app.route("/delete/<comment_id>")
+def delete_comment(comment_id):
+    comment = db.get_or_404(Comment, comment_id)
+    db.session.delete(comment)
+    db.session.commit()
+
+    return redirect(url_for('get_post'))
+
+
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+
+@app.route('/contact', methods=['GET', 'POST'])
+def contact():
+    form = ContactForm()
+
+    if form.validate_on_submit():
+        new_message = Contact(
+            name=form.name.data,
+            email=form.email.data,
+            body=form.message.data
+        )
+        db.session.add(new_message)
+        db.session.commit()
+
+        flash('Your message has been successfully received.', 'success')
+
+        return redirect(url_for('contact'))
+
+
+    return render_template('contact.html', form=form)
+
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(port=5001, debug=True)
