@@ -58,7 +58,7 @@
         <div class="row justify-content-center px-4 py-md-5 mb-5 px-sm-3">
             {% for post in posts %}
             <div class="col-12 py-4">
-                <a href="{{ url_for('get_post', post_id=post.id) }}" class="text-decoration-none post-card-link d-block mx-auto" style="max-width: 660px;"
+                <a href="{{ url_for('get_post', post_id=post.id) }}" class="text-decoration-none post-card-link d-block mx-auto post-card-max-width"
                    ondragstart="return false">
                     <div class="card p-4">
                         <div class="card-body px-0">
