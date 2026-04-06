@@ -122,7 +122,7 @@ def register():
             flash("Account successfully registered. Please log in.", "success")
             return redirect(url_for("login"))
 
-    return render_template("register-two.html", form=form)
+    return render_template("register.html", form=form)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -140,7 +140,7 @@ def login():
         else:
             flash("That email does not exist. Want to sign up?", "error")
 
-    return render_template("login-two.html", form=form)
+    return render_template("login.html", form=form)
 
 
 @app.route("/logout")
@@ -208,7 +208,7 @@ def create_post():
 
         return redirect(url_for('get_post', post_id=post_id))
 
-    return render_template('add-post-two.html', form=form)
+    return render_template('add-post.html', form=form)
 
 @app.route('/edit-post/<post_id>', methods=['GET', 'POST'])
 @login_required
