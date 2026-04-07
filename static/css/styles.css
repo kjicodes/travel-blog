@@ -24,6 +24,9 @@ nav {
     top: 0;
     background-color: #EA7B7B;
     z-index: 1020;
+}
+
+nav.navbar {
     flex-wrap: nowrap;
 }
 
