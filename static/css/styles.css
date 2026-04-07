@@ -24,6 +24,7 @@ nav {
     top: 0;
     background-color: #EA7B7B;
     z-index: 1020;
+    flex-wrap: nowrap;
 }
 
 .nav-greeting {
@@ -39,11 +40,13 @@ nav {
     align-self: center;
 }
 
-body:has(#contact-page) .nav-greeting {
+body:has(#contact-page) .nav-greeting,
+body:has(#add-post-page) .nav-greeting {
     color: #EA7B7B;
 }
 
-body:has(#contact-page) .nav-greeting-divider {
+body:has(#contact-page) .nav-greeting-divider,
+body:has(#add-post-page) .nav-greeting-divider {
     background-color: #EA7B7B;
 }
 
