@@ -26,6 +26,27 @@ nav {
     z-index: 1020;
 }
 
+.nav-greeting {
+    color: #FFEAD3;
+    font-style: italic;
+    pointer-events: none;
+}
+
+.nav-greeting-divider {
+    height: 1.25rem;
+    opacity: 0.4;
+    background-color: #FFEAD3;
+    align-self: center;
+}
+
+body:has(#contact-page) .nav-greeting {
+    color: #EA7B7B;
+}
+
+body:has(#contact-page) .nav-greeting-divider {
+    background-color: #EA7B7B;
+}
+
 .all-nav-links {
     color: black;
     opacity: 0.75
