@@ -258,6 +258,11 @@ def about():
 @app.route("/contact", methods=["GET", "POST"])
 def contact():
     form = ContactForm()
+
+    if request.method == "GET" and current_user.is_authenticated:
+        form.name.data = f"{current_user.first_name} {current_user.last_name}"
+        form.email.data = current_user.email
+
     if form.validate_on_submit():
         new_message = Contact(
             name=form.name.data,
