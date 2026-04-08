@@ -1,8 +1,11 @@
 import os
 from datetime import date
+from flask_mail import Mail, Message
+from smtplib import SMTPException
 from flask import Flask, render_template, redirect, url_for, request, flash, session
 from flask_bootstrap import Bootstrap5
 from flask_sqlalchemy import SQLAlchemy
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from sqlalchemy import Integer, String, Text, ForeignKey, Boolean, desc
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -16,6 +19,15 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
+#Configure mail service
+app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER")
+app.config["MAIL_PORT"] = os.environ.get("MAIL_PORT")
+app.config["MAIL_USE_TLS"] = True
+app.config["MAIL_USE_SSL"] = False
+app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME")
+app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD")
+app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_USERNAME")
+
 Bootstrap5(app)
 
 #Initalize DB
@@ -37,6 +49,7 @@ class User(UserMixin, db.Model):
     last_name: Mapped[str] = mapped_column(String(250), nullable=False)
     email: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String(250), nullable=False)
+    is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False)
     posts = relationship("BlogPost", back_populates="user")
     comments = relationship("Comment", back_populates="user")
 
@@ -92,6 +105,15 @@ login_manager.login_view = "login"
 def load_user(user_id):
     return db.session.get(User, user_id)
 
+#Flask Mail
+mail = Mail(app)
+
+#Generate token for verification email
+def generate_verification_token(user_id):
+    auth_s = URLSafeTimedSerializer(app.config["SECRET_KEY"])
+    token = auth_s.dumps(user_id, salt="verify-email")
+    return token
+
 @app.errorhandler(CSRFError)
 def handle_csrf_error():
     flash("Your session has expired. Please log in again.", "error")
@@ -101,26 +123,88 @@ def handle_csrf_error():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     form = RegisterForm()
-
     if form.validate_on_submit():
         hashed_password = generate_password_hash(form.password.data, method="pbkdf2", salt_length=8)
         new_user = User(
             first_name=form.first_name.data,
             last_name=form.last_name.data,
             email=form.email.data,
-            password=hashed_password
+            password=hashed_password,
+            is_verified=False
         )
         db.session.add(new_user)
+        #save new user to db
         try:
             db.session.commit()
         except IntegrityError:
+            #If user email exists:
             flash("Email already exists. Please login in.", "error")
             return redirect(url_for("login"))
         else:
-            flash("Account successfully registered. Please log in.", "success")
-            return redirect(url_for("login"))
+            #ELSE send confirmation email
+            #IF received, redirect to login page
+            #IF not received, render verification page
+
+            #Build confirmation URL and include in the verification email
+            token = generate_verification_token(new_user.id)
+            verify_url = url_for("verify_email", token=token, _external=True)
+            verification_msg = Message(
+                f"Verify your email",
+                recipients=[new_user.email],
+                html=f"<h4>Thank you for registering!</h4>"
+                     f"<p>Click the link below to verify your account:<br><a href='{verify_url}'><strong>Verify my account</strong></a></p>"
+                     f"<p><em>This link will expire in 24 hours.</em></p>"
+            )
+            try:
+                mail.send(verification_msg)
+            except SMTPException:
+                flash("Failed to send confirmation email. Please try again.", "error")
+                return render_template("verify-email.html", user=new_user)
+            else:
+                return render_template("verify-email.html", user=new_user)
 
     return render_template("register.html", form=form)
+
+@app.route("/register/verify/<int:user_id>")
+def resend_verification_email(user_id):
+    #IF resend button is clicked, do this:
+    user = db.session.get(User, user_id)
+    token = generate_verification_token(user.id)
+    verify_url = url_for("verify_email", token=token, _external=True)
+    verification_msg = Message(
+        f"Verify your email",
+        recipients=[user.email],
+        html=f"<h4>Thank you for registering!</h4>"
+             f"<p>Click the link below to verify your account:<br><a href='{verify_url}'><strong>Verify my account</strong></a></p>"
+             f"<p><em>This link will expire in 24 hours.</em></p>"
+    )
+    try:
+        mail.send(verification_msg)
+    except SMTPException:
+        flash("Failed to send confirmation email. Please try again.", "error")
+        return render_template("verify-email.html", user=user)
+    else:
+        flash("Confirmation email resent.", "success")
+        return render_template("verify-email.html", user=user)
+
+
+@app.route("/verify/<token>")
+def verify_email(token):
+    auth_s = URLSafeTimedSerializer(app.config["SECRET_KEY"])
+    try:
+        user_id = auth_s.loads(token, salt="verify-email", max_age=86400)
+    except SignatureExpired:
+        flash("Verification link has expired.", "error")
+        return redirect(url_for("login"))
+    except BadSignature:
+        flash("Invalid verification link.", "error")
+        return redirect(url_for("login"))
+    else:
+        user = db.session.get(User, user_id)
+        user.is_verified = True
+        db.session.commit()
+        flash("Email successfully verified. You can now log in.", "success")
+        return redirect(url_for("login"))
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -129,12 +213,17 @@ def login():
     if form.validate_on_submit():
         user = db.session.execute(db.select(User).where(User.email == form.email.data)).scalar()
         if user:
-            stored_password = user.password
-            if check_password_hash(stored_password, form.password.data):
-                login_user(user)
-                return redirect(url_for("get_all_posts"))
+            if user.is_verified:
+                stored_password = user.password
+                if check_password_hash(stored_password, form.password.data):
+                    login_user(user)
+                    return redirect(url_for("get_all_posts"))
+                else:
+                    flash("Invalid password. Please try again.", "error")
             else:
-                flash("Invalid password. Please try again.", "error")
+                flash("Please verify your email before logging in.", "error")
+                # print(user.id)
+                return render_template("login.html", form=form, unverified_user_id=user.id)
         else:
             flash("That email does not exist. Want to sign up?", "error")
     return render_template("login.html", form=form)
