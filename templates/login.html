@@ -6,30 +6,39 @@
     <title>Login – Roam&Write</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap"
+          rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-    <div id="login-page">
-        <div class="login-wrapper">
-            <a href="{{ url_for('get_all_posts') }}" class="back-link">&#8592; <span class="brand-text">Roam</span><span class="brand-amp">&amp;</span><span class="brand-text">Write</span></a>
+<div id="login-page">
+    <div class="login-wrapper">
+        <a href="{{ url_for('get_all_posts') }}" class="back-link">&#8592; <span class="brand-text">Roam</span><span
+                class="brand-amp">&amp;</span><span class="brand-text">Write</span></a>
 
-            <h1>Welcome<br>Back</h1>
-            <p class="subtitle">Enter your details to access your account.</p>
+        <h1>Welcome<br>Back</h1>
+        <p class="subtitle">Enter your details to access your account.</p>
 
-            {% from 'bootstrap5/form.html' import render_form %}
-            {{ render_form(form, novalidate=True, button_size="lg") }}
+        {% from 'bootstrap5/form.html' import render_form %}
+        {{ render_form(form, novalidate=True, button_size="lg") }}
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <p class="flash-msg {{ category }}">{{ message }}</p>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <p class="flash-msg {{ category }}">
+            {{ message }}
+            {% if unverified_user_id %}
+            <a href="{{ url_for('resend_verification_email', user_id=unverified_user_id) }}" class="text-dark">
+                Click to verify.
+            </a>
+            {% endif %}
+        </p>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
 
-            <span class="register-link">Don't have an account? <a href="{{ url_for('register') }}">Register</a></span>
-        </div>
+        <span class="register-link">Don't have an account? <a href="{{ url_for('register') }}">Register</a></span>
     </div>
+</div>
 </body>
 </html>
