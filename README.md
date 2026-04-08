@@ -11,6 +11,7 @@ Roam&Write was built with the idea that every journey has a story worth sharing.
 ## Features
 
 - **User authentication** — register, log in, and log out securely with hashed passwords
+- **Email verification** — new accounts require email verification before logging in
 - **Create posts** — document a trip with a title, subtitle, destination, body, star rating, visit count, and an optional image
 - **Edit & delete posts** — authors can update or remove their own posts
 - **Comments** — authenticated users can leave comments on any post; comment authors can delete their own comments
@@ -20,10 +21,10 @@ Roam&Write was built with the idea that every journey has a story worth sharing.
 
 ## Tech Stack
 
-- **Backend:** Python, Flask, Flask-Login, Flask-WTF, SQLAlchemy
+- **Backend:** Python, Flask, Flask-Login, Flask-Mail, Flask-WTF, itsdangerous, SQLAlchemy
 - **Frontend:** Jinja2, Bootstrap 5, Bootstrap-Flask
-- **Database:** SQLite
-- **Security:** Werkzeug password hashing (PBKDF2)
+- **Database:** SQLite (local) / PostgreSQL (Heroku)
+- **Security:** Werkzeug password hashing (PBKDF2), itsdangerous token-based email verification
 
 ## Getting Started
 
@@ -32,16 +33,18 @@ Roam&Write was built with the idea that every journey has a story worth sharing.
 
 ## Pages
 
-| Page | Route | Description |
-|------|-------|-------------|
-| Home | `/` | Browse all travel posts |
-| Post | `/post/<id>` | Read a post and leave a comment |
-| Add Post | `/add-post` | Create a new travel post (login required) |
-| Edit Post | `/edit-post/<id>` | Edit an existing post (login required) |
-| Register | `/register` | Create a new account |
-| Login | `/login` | Log in to your account |
-| About | `/about` | Learn about Roam&Write |
-| Contact | `/contact` | Send a message |
+| Page          | Route                   | Description                               |
+|---------------|-------------------------|-------------------------------------------|
+| Home          | `/`                     | Browse all travel posts                   |
+| Post          | `/post/<id>`            | Read a post and leave a comment           |
+| Add Post      | `/add-post`             | Create a new travel post (login required) |
+| Edit Post     | `/edit-post/<id>`       | Edit an existing post (login required)    |
+| Register      | `/register`             | Create a new account                      |
+| Login         | `/login`                | Log in to your account                    |
+| About         | `/about`                | Learn about Roam&Write                    |
+| Contact       | `/contact`              | Send a message                            |
+| Verify Email  | `/register/verify/<id>` | Verify account after registration         |
+| Confirm Email | `/verify/<token>`       | Email confirmation link                   |
 
 ## Author
 
