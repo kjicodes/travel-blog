@@ -1,7 +1,21 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, TextAreaField, BooleanField, SelectField, PasswordField, EmailField
 from wtforms.fields.numeric import IntegerField
-from wtforms.validators import DataRequired, Length, Email, NumberRange, URL, Optional
+from wtforms.validators import DataRequired, Length, Email, NumberRange, URL, Optional, EqualTo
+from email_validator import validate_email, EmailNotValidError
+
+
+def normalize_email(email):
+    """Normalize an email address to its canonical form before validation."""
+    if email:
+        try:
+            normalized_email = validate_email(email, check_deliverability=False).normalized
+        except EmailNotValidError:
+            return email
+        else:
+            return normalized_email
+    else:
+        return email
 
 
 class CommentForm(FlaskForm):
@@ -12,8 +26,9 @@ class CommentForm(FlaskForm):
 class RegisterForm(FlaskForm):
     first_name = StringField('First Name*', validators=[DataRequired()], render_kw={"placeholder": "First name", "class": "form-control"})
     last_name = StringField('Last Name*', validators=[DataRequired()], render_kw={"placeholder": "Last name", "class": "form-control"})
-    email = EmailField('Email*', validators=[Email(), DataRequired()], render_kw={"placeholder": "Email", "class": "form-control"})
+    email = EmailField('Email*', validators=[Email(check_deliverability=True), DataRequired()], filters=[normalize_email], render_kw={"placeholder": "Email", "class": "form-control"})
     password = PasswordField('Password*', validators=[DataRequired()], render_kw={"placeholder": "Password", "class": "form-control mb-4"})
+    confirm_password = PasswordField('Confirm Password*', validators=[EqualTo("password", message="Passwords do not match."),DataRequired()], render_kw={"placeholder": "Re-enter password", "class": "form-control mb-4"})
     submit = SubmitField('Sign Up', render_kw={"class": "mb-4"})
 
 
