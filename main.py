@@ -50,6 +50,7 @@ class User(UserMixin, db.Model):
     email: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String(250), nullable=False)
     is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    verification_token: Mapped[str] = mapped_column(String(250), nullable=True)
     posts = relationship("BlogPost", back_populates="user")
     comments = relationship("Comment", back_populates="user")
 
@@ -136,8 +137,9 @@ def register():
         #save new user to db
         try:
             db.session.commit()
-        except IntegrityError:
+        except IntegrityError as e:
             #If user email exists:
+            app.logger.error(f"Email already exists: {e}")
             flash("Email already exists. Please login in.", "error")
             return redirect(url_for("login"))
         else:
@@ -147,6 +149,8 @@ def register():
 
             #Build confirmation URL and include in the verification email
             token = generate_verification_token(new_user.id)
+            new_user.verification_token = token
+            db.session.commit()
             verify_url = url_for("verify_email", token=token, _external=True)
             verification_msg = Message(
                 f"Verify your email",
@@ -158,7 +162,7 @@ def register():
             try:
                 mail.send(verification_msg)
             except SMTPException as e:
-                app.logger.error(f"Failed to send verification email: {e}")
+                app.logger.error(f"Failed to send confirmation email: {e}")
                 flash("Failed to send confirmation email. Please try again.", "error")
                 return render_template("verify-email.html", user=new_user)
             else:
@@ -171,6 +175,8 @@ def resend_verification_email(user_id):
     #IF resend button is clicked, do this:
     user = db.session.get(User, user_id)
     token = generate_verification_token(user.id)
+    user.verification_token = token
+    db.session.commit()
     verify_url = url_for("verify_email", token=token, _external=True)
     verification_msg = Message(
         f"Verify your email",
@@ -181,7 +187,8 @@ def resend_verification_email(user_id):
     )
     try:
         mail.send(verification_msg)
-    except SMTPException:
+    except SMTPException as e:
+        app.logger.error(f"Failed to send confirmation email: {e}")
         flash("Failed to send confirmation email. Please try again.", "error")
         return render_template("verify-email.html", user=user)
     else:
@@ -194,18 +201,25 @@ def verify_email(token):
     auth_s = URLSafeTimedSerializer(app.config["SECRET_KEY"])
     try:
         user_id = auth_s.loads(token, salt="verify-email", max_age=86400)
-    except SignatureExpired:
+    except SignatureExpired as e:
+        app.logger.error(f"Verification link has expired: {e}")
         flash("Verification link has expired.", "error")
         return redirect(url_for("login"))
-    except BadSignature:
+    except BadSignature as e:
+        app.logger.error(f"Invalid verification link: {e}")
         flash("Invalid verification link.", "error")
         return redirect(url_for("login"))
     else:
         user = db.session.get(User, user_id)
-        user.is_verified = True
-        db.session.commit()
-        flash("Email successfully verified. You can now log in.", "success")
-        return redirect(url_for("login"))
+        if user.verification_token == token:
+            user.is_verified = True
+            db.session.commit()
+            flash("Email successfully verified. You can now log in.", "success")
+            return redirect(url_for("login"))
+        else:
+            print(user.id)
+            flash("This verification link is no longer valid. Please use the most recent link sent to your email.", "error")
+            return redirect(url_for("login", unverified_user_id=user_id))
 
 
 @app.route("/login", methods=["GET", "POST"])
