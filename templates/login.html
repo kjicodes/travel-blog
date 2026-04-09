@@ -27,6 +27,7 @@
         {% for category, message in messages %}
         <p class="flash-msg {{ category }}">
             {{ message }}
+            {% set unverified_user_id = request.args.get("unverified_user_id") %}
             {% if unverified_user_id %}
             <a href="{{ url_for('resend_verification_email', user_id=unverified_user_id) }}" class="text-dark">
                 Click to verify.

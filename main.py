@@ -2,18 +2,18 @@ import os
 from datetime import date
 from flask_mail import Mail, Message
 from smtplib import SMTPException
-from flask import Flask, render_template, redirect, url_for, request, flash, session
+from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_bootstrap import Bootstrap5
-from flask_sqlalchemy import SQLAlchemy
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
-from sqlalchemy import Integer, String, Text, ForeignKey, Boolean, desc
+from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from werkzeug.security import generate_password_hash, check_password_hash
 from forms import CreatePostForm, LoginForm, RegisterForm, ContactForm, CommentForm
 from flask_wtf.csrf import CSRFError
-from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from dotenv import load_dotenv
+from extensions import db
+from models import User, BlogPost, Comment, Contact
 
 load_dotenv()
 
@@ -30,69 +30,12 @@ app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_USERNAME")
 
 Bootstrap5(app)
 
-#Initalize DB
-class Base(DeclarativeBase):
-    pass
-
-db = SQLAlchemy(model_class=Base)
+#Configure db
 uri = os.environ.get("DATABASE_URL", "sqlite:///travel-blog-posts.db")
 if uri.startswith("postgres://"):
     uri = uri.replace("postgres://", "postgresql://", 1)
 app.config["SQLALCHEMY_DATABASE_URI"] = uri
 db.init_app(app)
-
-
-class User(UserMixin, db.Model):
-    __tablename__ = "users"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    first_name: Mapped[str] = mapped_column(String(250), nullable=False)
-    last_name: Mapped[str] = mapped_column(String(250), nullable=False)
-    email: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
-    password: Mapped[str] = mapped_column(String(250), nullable=False)
-    is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    verification_token: Mapped[str] = mapped_column(String(250), nullable=True)
-    posts = relationship("BlogPost", back_populates="user")
-    comments = relationship("Comment", back_populates="user")
-
-
-class BlogPost(db.Model):
-    __tablename__ = "blog_posts"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id = mapped_column(ForeignKey("users.id"))
-    title: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
-    subtitle: Mapped[str] = mapped_column(String(250), nullable=False)
-    location: Mapped[str] = mapped_column(String(250), nullable=False)
-    num_times_visited: Mapped[int] = mapped_column(Integer, nullable=False)
-    visit_again: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    date: Mapped[str] = mapped_column(String(250), nullable=False)
-    body: Mapped[str] = mapped_column(Text, nullable=False)
-    rating: Mapped[str] = mapped_column(String(250), nullable=False)
-    img_url: Mapped[str] = mapped_column(Text, nullable=False)
-    user = relationship("User", back_populates="posts")
-    comments = relationship("Comment", back_populates="post")
-
-    def calc_comments_count(self):
-        return len(self.comments)
-
-class Comment(db.Model):
-    __tablename__ = "comments"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id = mapped_column(ForeignKey("users.id"))
-    post_id = mapped_column(ForeignKey("blog_posts.id"))
-    comment: Mapped[str] = mapped_column(Text, nullable=False)
-    date: Mapped[str] = mapped_column(String(250), nullable=False)
-    user = relationship("User", back_populates="comments")
-    post = relationship("BlogPost", back_populates="comments")
-
-
-class Contact(db.Model):
-    __tablename__ = "contact_messages"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(250), nullable=False)
-    email: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
-    body: Mapped[str] = mapped_column(Text, nullable=False)
-
-
 with app.app_context():
     db.create_all()
 
@@ -109,14 +52,14 @@ def load_user(user_id):
 #Flask Mail
 mail = Mail(app)
 
-#Generate token for verification email
+
 def generate_verification_token(user_id):
     auth_s = URLSafeTimedSerializer(app.config["SECRET_KEY"])
     token = auth_s.dumps(user_id, salt="verify-email")
     return token
 
 @app.errorhandler(CSRFError)
-def handle_csrf_error():
+def handle_csrf_error(e):
     flash("Your session has expired. Please log in again.", "error")
     return redirect(url_for("login"))
 
@@ -134,19 +77,14 @@ def register():
             is_verified=False
         )
         db.session.add(new_user)
-        #save new user to db
+
         try:
             db.session.commit()
         except IntegrityError as e:
-            #If user email exists:
             app.logger.error(f"Email already exists: {e}")
             flash("Email already exists. Please login in.", "error")
             return redirect(url_for("login"))
         else:
-            #ELSE send confirmation email
-            #IF received, redirect to login page
-            #IF not received, render verification page
-
             #Build confirmation URL and include in the verification email
             token = generate_verification_token(new_user.id)
             new_user.verification_token = token
@@ -172,7 +110,6 @@ def register():
 
 @app.route("/register/verify/<int:user_id>")
 def resend_verification_email(user_id):
-    #IF resend button is clicked, do this:
     user = db.session.get(User, user_id)
     token = generate_verification_token(user.id)
     user.verification_token = token
@@ -192,7 +129,7 @@ def resend_verification_email(user_id):
         flash("Failed to send confirmation email. Please try again.", "error")
         return render_template("verify-email.html", user=user)
     else:
-        flash("Confirmation email resent.", "success")
+        flash("Confirmation email resent.", "info")
         return render_template("verify-email.html", user=user)
 
 
@@ -202,24 +139,28 @@ def verify_email(token):
     try:
         user_id = auth_s.loads(token, salt="verify-email", max_age=86400)
     except SignatureExpired as e:
+        user_id = e.payload
         app.logger.error(f"Verification link has expired: {e}")
         flash("Verification link has expired.", "error")
-        return redirect(url_for("login"))
+        return redirect(url_for("login", unverified_user_id=user_id))
     except BadSignature as e:
         app.logger.error(f"Invalid verification link: {e}")
         flash("Invalid verification link.", "error")
         return redirect(url_for("login"))
     else:
         user = db.session.get(User, user_id)
+        if user.is_verified:
+            flash("Your email has already been verified. Please log in.", "info")
+            return redirect(url_for("login"))
         if user.verification_token == token:
             user.is_verified = True
+            user.verification_token = None
             db.session.commit()
             flash("Email successfully verified. You can now log in.", "success")
             return redirect(url_for("login"))
         else:
-            print(user.id)
             flash("This verification link is no longer valid. Please use the most recent link sent to your email.", "error")
-            return redirect(url_for("login", unverified_user_id=user_id))
+            return redirect(url_for("login", unverified_user_id=user.id))
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -234,11 +175,11 @@ def login():
                     login_user(user)
                     return redirect(url_for("get_all_posts"))
                 else:
-                    flash("Invalid password. Please try again.", "error")
+                    flash("Incorrect password. Please try again.", "error")
             else:
                 flash("Please verify your email before logging in.", "error")
                 # print(user.id)
-                return render_template("login.html", form=form, unverified_user_id=user.id)
+                return redirect(url_for("login", unverified_user_id=user.id))
         else:
             flash("That email does not exist. Want to sign up?", "error")
     return render_template("login.html", form=form)
@@ -250,7 +191,6 @@ def logout():
     flash("You have successfully logged out.", "success")
     return redirect(url_for("login"))
 
-
 @app.route("/")
 def get_all_posts():
     all_posts = db.session.execute(db.select(BlogPost).order_by(desc(BlogPost.id))).scalars().all()
@@ -260,7 +200,6 @@ def get_all_posts():
 def get_post(post_id):
     post = db.get_or_404(BlogPost, post_id)
     comments = db.session.execute(db.select(Comment).where(Comment.post == post).order_by(desc(Comment.id))).scalars().all()
-
     form = CommentForm()
     if form.validate_on_submit():
         if current_user.is_authenticated:
@@ -272,7 +211,6 @@ def get_post(post_id):
             )
             db.session.add(new_comment)
             db.session.commit()
-
             return redirect(url_for("get_post", post_id=post.id))
         else:
             flash("Please log in.", "error")
@@ -284,7 +222,6 @@ def get_post(post_id):
 @login_required
 def create_post():
     form = CreatePostForm()
-
     if form.validate_on_submit():
         new_post = BlogPost(
             title=form.title.data,
@@ -362,7 +299,6 @@ def about():
 @app.route("/contact", methods=["GET", "POST"])
 def contact():
     form = ContactForm()
-
     if request.method == "GET" and current_user.is_authenticated:
         form.name.data = f"{current_user.first_name} {current_user.last_name}"
         form.email.data = current_user.email
@@ -375,7 +311,6 @@ def contact():
         )
         db.session.add(new_message)
         db.session.commit()
-
         flash("Your message has been successfully received.", "success")
         return redirect(url_for("contact"))
 
