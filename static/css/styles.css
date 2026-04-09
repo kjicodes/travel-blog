@@ -449,6 +449,10 @@ body:has(#add-post-page) nav {
     color: red;
 }
 
+.info {
+    color: #0d6efd;
+}
+
 /* Login / Register standalone pages */
 body:has(#login-page),
 body:has(#register-page),
