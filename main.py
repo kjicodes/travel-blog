@@ -21,7 +21,7 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
 #Configure mail service
 app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER")
-app.config["MAIL_PORT"] = os.environ.get("MAIL_PORT")
+app.config["MAIL_PORT"] = 587
 app.config["MAIL_USE_TLS"] = True
 app.config["MAIL_USE_SSL"] = False
 app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME")
@@ -157,7 +157,8 @@ def register():
             )
             try:
                 mail.send(verification_msg)
-            except SMTPException:
+            except SMTPException as e:
+                app.logger.error(f"Failed to send verification email: {e}")
                 flash("Failed to send confirmation email. Please try again.", "error")
                 return render_template("verify-email.html", user=new_user)
             else:
