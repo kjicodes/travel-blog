@@ -2,8 +2,16 @@
 
 <div class="container px-4 px-lg-5">
     <div class="row flex-md-row-reverse align-items-center justify-content-lg-around g-lg-5 pb-4 py-lg-5 px-4 px-lg-5 px-sm-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <p class="{{ category }}">{{ message }}</p>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
         <div class="col-lg-3">
-            <img src="{{ url_for('static', filename='images/sunset-logo.png') }}" class="d-none d-lg-block mx-lg-auto img-fluid"
+            <img src="{{ url_for('static', filename='images/sunset-logo.png') }}"
+                 class="d-none d-lg-block mx-lg-auto img-fluid"
                  alt="Sunset logo" width="300" height="300" loading="lazy" ondragstart="return false">
         </div>
         <div class="col-lg-9 col-md-12">
@@ -40,7 +48,8 @@
     <div class="container pt-5 px-4 px-lg-5">
         <div class="row px-4 px-lg-5 px-sm-3">
             <div class="col-12">
-                <h2 class="display-5 fw-bold text-body-emphasis pb-3 mb-0 d-flex align-items-center gap-2">Latest Stories</h2>
+                <h2 class="display-5 fw-bold text-body-emphasis pb-3 mb-0 d-flex align-items-center gap-2">Latest
+                    Stories</h2>
                 {% if posts == [] %}
                 <p class="fs-5 fs-md-4 pb-3">Nobody has posted yet. Be the first to create some content.</p>
                 {% else %}
@@ -62,13 +71,15 @@
                                 {% if featured.img_url %}
                                 <img src="{{ featured.img_url }}" alt="Post image" class="featured-img">
                                 {% else %}
-                                <img src="{{ url_for('static', filename='./images/no-img.png') }}" alt="No image available" class="featured-img">
+                                <img src="{{ url_for('static', filename='./images/no-img.png') }}"
+                                     alt="No image available" class="featured-img">
                                 {% endif %}
                             </div>
                             <div class="col-lg-6 d-flex align-items-center">
                                 <div class="card-body p-4 p-lg-5">
                                     <p class="fs-6 mb-2 opacity-75 d-flex align-items-center gap-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor"
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
+                                             fill="currentColor"
                                              class="bi bi-person-circle flex-shrink-0" viewBox="0 0 16 16">
                                             <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
                                             <path fill-rule="evenodd"
@@ -85,7 +96,8 @@
                                         </svg>
                                     </p>
                                     <p class="fs-6 opacity-75 mb-0">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                             fill="currentColor"
                                              class="bi bi-chat-left me-2" viewBox="0 0 16 16">
                                             <path d="M14 1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H4.414A2 2 0 0 0 3 11.586l-2 2V2a1 1 0 0 1 1-1zM2 0a2 2 0 0 0-2 2v12.793a.5.5 0 0 0 .854.353l2.853-2.853A1 1 0 0 1 4.414 12H14a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/>
                                         </svg>
@@ -110,7 +122,8 @@
                         {% if post.img_url %}
                         <img src="{{ post.img_url }}" alt="Post image" class="grid-card-img">
                         {% else %}
-                        <img src="{{ url_for('static', filename='./images/no-img.png') }}" alt="No image available" class="grid-card-img">
+                        <img src="{{ url_for('static', filename='./images/no-img.png') }}" alt="No image available"
+                             class="grid-card-img">
                         {% endif %}
                         <div class="card-body px-4 pt-3 pb-4">
                             <p class="fs-6 mb-1 opacity-75 d-flex align-items-center gap-2">
