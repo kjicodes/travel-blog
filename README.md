@@ -62,21 +62,6 @@ Roam&Write was built with the idea that every journey has a story worth sharing.
 
 5. Visit `http://localhost:5001`
 
-## Pages
-
-| Page          | Route                   | Description                               |
-|---------------|-------------------------|-------------------------------------------|
-| Home          | `/`                     | Browse all travel posts                   |
-| Post          | `/post/<id>`            | Read a post and leave a comment           |
-| Add Post      | `/add-post`             | Create a new travel post (login required) |
-| Edit Post     | `/edit-post/<id>`       | Edit an existing post (login required)    |
-| Register      | `/register`             | Create a new account                      |
-| Login         | `/login`                | Log in to your account                    |
-| About         | `/about`                | Learn about Roam&Write                    |
-| Contact       | `/contact`              | Send a message                            |
-| Verify Email  | `/register/verify/<id>` | Verify account after registration         |
-| Confirm Email | `/verify/<token>`       | Email confirmation link                   |
-
 ## Author
 
 Developed by **[Kateleen Issa](https://www.linkedin.com/in/kjicodes)**
