@@ -14,7 +14,9 @@ Roam&Write was built with the idea that every journey has a story worth sharing.
 - **Email verification** — new accounts require email verification before logging in
 - **Create posts** — document a trip with a title, subtitle, destination, body, star rating, visit count, and an optional image
 - **Edit & delete posts** — authors can update or remove their own posts
-- **Comments** — authenticated users can leave comments on any post; comment authors can delete their own comments
+- **Role-based access control** — `admin_or_owner` decorator restricts post/comment deletion to owners and admins
+- **Route protection** — unauthenticated users are redirected to login; missing or unauthorized resources return user-friendly flash messages
+- **Comments** — authenticated users can leave comments on any post; comment authors and admins can delete comments
 - **Contact form** — visitors can send a message directly through the site
 - **About page** — overview of the platform and its purpose
 - **Responsive design** — layout adapts across desktop, tablet, and mobile screen sizes
@@ -24,7 +26,7 @@ Roam&Write was built with the idea that every journey has a story worth sharing.
 - **Backend:** Python, Flask, Flask-Login, Flask-Mail, Flask-WTF, itsdangerous, SQLAlchemy
 - **Frontend:** Jinja2, Bootstrap 5, Bootstrap-Flask
 - **Database:** SQLite (local) / PostgreSQL (Heroku)
-- **Security:** Werkzeug password hashing (PBKDF2), itsdangerous token-based email verification
+- **Security:** Werkzeug password hashing (PBKDF2), itsdangerous token-based email verification, custom RBAC decorator (admin_or_owner)
 
 ## Getting Started
 
